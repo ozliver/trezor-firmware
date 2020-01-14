@@ -12,7 +12,11 @@ OBJS += sys.o
 
 ifneq ($(EMULATOR),1)
 OBJS += setup.o
+endif
+
 OBJS += si2c.o
+
+ifneq ($(EMULATOR),1)
 OBJS += mi2c.o
 OBJS += usart.o
 endif
@@ -21,9 +25,9 @@ OBJS += util.o
 OBJS += memory.o
 OBJS += supervise.o
 
-ifneq ($(EMULATOR),1)
+# ifneq ($(EMULATOR),1)
 OBJS += timer.o
-endif
+# endif
 
 OBJS += usb_standard.o
 OBJS += usb21_standard.o
