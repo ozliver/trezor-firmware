@@ -17,18 +17,17 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "oled.h"
+#include "timer.h"
+
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/spi.h>
-
 #include <string.h>
 
-#include "memzero.h"
-#include "oled.h"
-#include "util.h"
-#include "prompt.h"
 #include "buttons.h"
-
-
+#include "memzero.h"
+#include "prompt.h"
+#include "util.h"
 
 #define OLED_SETCONTRAST 0x81
 #define OLED_DISPLAYALLON_RESUME 0xA4
@@ -72,7 +71,6 @@ static uint8_t _oledbuffer[OLED_BUFSIZE];
 static bool is_debug_link = 0;
 Ble_Info g_ble_info;
 USB_Info g_usb_info;
-
 
 /*
  * macros to convert coordinate to bit position
@@ -513,7 +511,7 @@ void oledSCAInside(int y1, int y2, int width, int a, int b) {
  */
 void vDisp_PromptInfo(uint8_t ucIndex) {
   // oledClear();
-   g_ucLanguageFlag = 1;
+  g_ucLanguageFlag = 1;
   switch (ucIndex) {
     case DISP_NOT_ACTIVE:
       if (g_ucLanguageFlag) {
@@ -572,7 +570,8 @@ void vDisp_PromptInfo(uint8_t ucIndex) {
       if (g_ucLanguageFlag) {
         oledDrawBitmap(0, 48, &bmp_cn_prikey_gen);
       } else {
-        oledDrawStringCenter(60, 48, "Generating private key...", FONT_STANDARD);
+        oledDrawStringCenter(60, 48, "Generating private key...",
+                             FONT_STANDARD);
       }
       break;
     case DISP_ACTIVE_SUCCESS:
@@ -671,11 +670,11 @@ void vDisp_PromptInfo(uint8_t ucIndex) {
       oledRefresh();
       return;
     case DISP_BLE_NAME:
-      oledDrawStringCenter(60, 56, (const char *)g_ble_info.ucBle_Name, FONT_STANDARD);
+      oledDrawStringCenter(60, 56, (const char *)g_ble_info.ucBle_Name,
+                           FONT_STANDARD);
       break;
     default:
       break;
   }
   //   oledRefresh();
 }
-

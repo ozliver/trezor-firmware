@@ -17,9 +17,10 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "usb.h"
+
 #include <libopencm3/stm32/flash.h>
 #include <libopencm3/usb/usbd.h>
-
 #include <string.h>
 
 #include "bootloader.h"
@@ -34,15 +35,12 @@
 #include "secp256k1.h"
 #include "sha2.h"
 #include "signatures.h"
-#include "usb.h"
-#include "util.h"
-
 #include "usb21_standard.h"
-#include "webusb.h"
-#include "winusb.h"
-
 #include "usb_desc.h"
 #include "usb_send.h"
+#include "util.h"
+#include "webusb.h"
+#include "winusb.h"
 
 enum {
   STATE_READY,

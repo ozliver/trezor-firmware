@@ -18,7 +18,9 @@
  */
 
 #include "common.h"
+
 #include <stdio.h>
+
 #include "bitmaps.h"
 #include "firmware/usb.h"
 #include "hmac_drbg.h"
