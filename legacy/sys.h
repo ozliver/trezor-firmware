@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2020 Bixin
+ */
+
 #ifndef _sys_H_
 #define _sys_H_
 

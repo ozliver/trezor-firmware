@@ -1,3 +1,6 @@
+/*
+ * Copyright (C) 2020 Bixin
+ */
 
 #include "sys.h"
 
@@ -94,7 +97,6 @@ void vPower_Control(uint8_t ucMode) {
           s_usPower_Button_Status = POWER_BUTTON_DOWN;
           break;
         }
-
       } else {
         delay_time(2);
         if (0x00 == GET_BUTTON_CANCEL()) {
@@ -104,7 +106,6 @@ void vPower_Control(uint8_t ucMode) {
         }
       }
     }
-
   } else {
     if ((WORK_MODE_USB != g_ucWorkMode) && (GET_BUTTON_CANCEL())) {
       // no usb and button down and no nfc
