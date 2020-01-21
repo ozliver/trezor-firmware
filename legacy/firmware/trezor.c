@@ -46,7 +46,7 @@
 /* Screen timeout */
 // uint32_t system_millis_lock_start = 0;
 
-//void check_lock_screen(void) {
+// void check_lock_screen(void) {
 //  buttonUpdate();
 //  // wake from screensaver on any button
 //  if (layoutLast == layoutScreensaver &&

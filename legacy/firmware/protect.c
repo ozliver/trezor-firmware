@@ -58,11 +58,11 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
     usbPoll();
     // check for ButtonAck
 #if EMULATOR
-g_ucWorkMode = 0x20;
+    g_ucWorkMode = 0x20;
 #endif
 #if DEBUG_LINK
-g_ucWorkMode = 0x20;
-#endif 
+    g_ucWorkMode = 0x20;
+#endif
     if (msg_tiny_id == MessageType_MessageType_ButtonAck) {
       msg_tiny_id = 0xFFFF;
       acked = true;

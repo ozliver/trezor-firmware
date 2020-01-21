@@ -286,14 +286,11 @@ void vlayoutLogo(void) {
 #endif
   if (WORK_MODE_BLE == g_ucWorkMode) {
     oledDrawBitmap(0, 0, &bmp_ble);
-  }
-  else if (WORK_MODE_USB == g_ucWorkMode) {
+  } else if (WORK_MODE_USB == g_ucWorkMode) {
     oledDrawBitmap(0, 0, &bmp_usb);
-  }
-  else if (WORK_MODE_NFC == g_ucWorkMode) {
+  } else if (WORK_MODE_NFC == g_ucWorkMode) {
     oledDrawBitmap(0, 0, &bmp_nfc);
-  }
-  else {
+  } else {
     oledDrawBitmap(0, 0, &bmp_ble);
   }
   oledDrawBitmap(0, 16, &bmp_logo);

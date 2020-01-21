@@ -5,18 +5,19 @@
 #include <string.h>
 
 #include "bitmaps.h"
+#include "firmware/trezor.h"
 #include "si2c.h"
 #include "timer.h"
-#include "firmware/trezor.h"
+
 
 uint8_t g_ucWorkMode = 0;
 
 //#if EMULATOR
-//g_ucWorkMode = 0x20;
+// g_ucWorkMode = 0x20;
 //#endif
 
 //#if DEBUG_LINK
-//g_ucWorkMode = 0x20;
+// g_ucWorkMode = 0x20;
 //#endif
 
 uint8_t g_ucFlag = 0;
