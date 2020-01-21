@@ -45,6 +45,9 @@ static uint16_t s_usCurrentCount;
 
 static uint16_t s_uiShowLength;
 
+/* Screen timeout */
+uint32_t system_millis_lock_start = 0;
+
 #define BLE_NAME "Ble name:"
 #define BLE_MAC "Ble mac:"
 #define BLE_VER "Ble version:"
@@ -278,13 +281,19 @@ void layoutScreensaver(void) {
 }
 
 void vlayoutLogo(void) {
+#if ((EMULATOR == 1) || (DEBUG_LINK == 1))
+  g_ucWorkMode = 0x20;
+#endif
   if (WORK_MODE_BLE == g_ucWorkMode) {
     oledDrawBitmap(0, 0, &bmp_ble);
-  } else if (WORK_MODE_USB == g_ucWorkMode) {
+  }
+  else if (WORK_MODE_USB == g_ucWorkMode) {
     oledDrawBitmap(0, 0, &bmp_usb);
-  } else if (WORK_MODE_NFC == g_ucWorkMode) {
+  }
+  else if (WORK_MODE_NFC == g_ucWorkMode) {
     oledDrawBitmap(0, 0, &bmp_nfc);
-  } else {
+  }
+  else {
     oledDrawBitmap(0, 0, &bmp_ble);
   }
   oledDrawBitmap(0, 16, &bmp_logo);
@@ -356,7 +365,7 @@ void layoutHome(void) {
   oledRefresh();
 
   // Reset lock screen timeout
-  // system_millis_lock_start = timer_ms();
+  system_millis_lock_start = timer_ms();
 }
 
 static void render_address_dialog(const CoinInfo *coin, const char *address,
@@ -1175,6 +1184,15 @@ void vDISP_DeviceInfo(void) {
         }
         vGet_DeviceInfo(s_usCurrentCount);
       }
+    }
+  }
+  // if homescreen is shown for too long
+  if (layoutLast == layoutHome) {
+    if ((timer_ms() - system_millis_lock_start) >=
+        config_getAutoLockDelayMs()) {
+      // lock the screen
+      session_clear(true);
+      layoutScreensaver();
     }
   }
 }
