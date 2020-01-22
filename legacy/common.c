@@ -22,13 +22,13 @@
 #include <stdio.h>
 
 #include "bitmaps.h"
+#include "buttons.h"
 #include "firmware/usb.h"
 #include "hmac_drbg.h"
 #include "layout.h"
 #include "oled.h"
 #include "rng.h"
 #include "util.h"
-#include "buttons.h"
 
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
