@@ -9,6 +9,9 @@
 #include "si2c.h"
 #include "sys.h"
 #include "timer.h"
+#include "oled.h"
+#include "usart.h"
+#include "buttons.h"
 
 uint8_t g_ucWorkMode = 0;
 uint8_t g_ucFlag = 0;

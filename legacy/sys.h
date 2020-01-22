@@ -7,12 +7,6 @@
 
 #include <libopencm3/stm32/gpio.h>
 
-#include "buttons.h"
-#include "oled.h"
-#include "timer.h"
-#include "usart.h"
-
-
 // Ble display
 #define BT_LINK 0x01          // Connect by Bluetooth
 #define BT_UNLINK 0x02        // BLE disconnected

@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "../sys.h"
+#include "../buttons.h"
 #include "bignum.h"
 #include "bitmaps.h"
 #include "config.h"
