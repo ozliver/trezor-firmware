@@ -12,6 +12,7 @@
 #include "timer.h"
 #include "usart.h"
 
+
 // Ble display
 #define BT_LINK 0x01          // Connect by Bluetooth
 #define BT_UNLINK 0x02        // BLE disconnected
@@ -45,7 +46,7 @@
 
 #define GPIO_USB_INSERT GPIO8
 
-#if (OLD_PCB)
+#ifdef OLD_PCB
 #define GPIO_NFC_INSERT GPIO5
 #else
 #define GPIO_NFC_INSERT GPIO1
