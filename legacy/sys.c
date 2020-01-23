@@ -13,7 +13,6 @@
 #include "timer.h"
 #include "usart.h"
 
-
 uint8_t g_ucWorkMode = 0;
 uint8_t g_ucFlag = 0;
 uint8_t s_usPower_Button_Status = POWER_BUTTON_UP;
