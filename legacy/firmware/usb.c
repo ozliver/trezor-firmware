@@ -486,12 +486,16 @@ void usb_ble_nfc_poll(void) {
 }
 
 void usbPoll(void) {
+#if DEBUG_LINK
+  g_ucWorkMode = 0x20;
+#endif
+  static const uint8_t *data;
   if (WORK_MODE_USB == g_ucWorkMode) {
     if (usbd_dev == NULL) {
       return;
     }
 
-    static const uint8_t *data;
+    // static const uint8_t *data;
     // poll read buffer
     usbd_poll(usbd_dev);
     // write pending data

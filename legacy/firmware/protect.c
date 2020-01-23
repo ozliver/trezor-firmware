@@ -57,6 +57,12 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
   for (;;) {
     usbPoll();
     // check for ButtonAck
+#if EMULATOR
+    g_ucWorkMode = 0x20;
+#endif
+#if DEBUG_LINK
+    g_ucWorkMode = 0x20;
+#endif
     if (msg_tiny_id == MessageType_MessageType_ButtonAck) {
       msg_tiny_id = 0xFFFF;
       acked = true;
@@ -83,7 +89,6 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
           vDISP_TurnPageDOWN();
         }
       }
-
       // check for Cancel / Initialize
       protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
       protectAbortedByInitialize =
@@ -301,7 +306,7 @@ bool protectChangePin(bool removal) {
     }
     strlcpy(new_pin, pin, sizeof(new_pin));
 
-#if 0
+#if ((EMULATOR == 1) || (DEBUG_LINK == 1))
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond,
                      _("Please re-enter new PIN:"));
     if (pin == NULL) {

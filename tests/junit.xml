@@ -1,0 +1,2359 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite errors="18" failures="0" hostname="ubuntu" name="pytest" skipped="0" tests="18" time="1.311" timestamp="2020-01-17T17:56:34.581937"><testcase classname="tests.device_tests.test_msg_ethereum_verifymessage.TestMsgEthereumVerifymessage" file="tests/device_tests/test_msg_ethereum_verifymessage.py" line="66" name="test_verify_invalid" time="0.020"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_verify_invalid&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_verify_invalid&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_ethereum_verifymessage.TestMsgEthereumVerifymessage" file="tests/device_tests/test_msg_ethereum_verifymessage.py" line="61" name="test_verify" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_verify&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_verify&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_stellar_sign_transaction" file="tests/device_tests/test_msg_stellar_sign_transaction.py" line="110" name="test_sign_tx_create_account_op" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_create_account_op&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_create_account_op&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_stellar_sign_transaction" file="tests/device_tests/test_msg_stellar_sign_transaction.py" line="186" name="test_sign_tx_payment_op_custom_asset12" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_payment_op_custom_asset12&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_payment_op_custom_asset12&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_stellar_sign_transaction" file="tests/device_tests/test_msg_stellar_sign_transaction.py" line="165" name="test_sign_tx_payment_op_custom_asset1" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_payment_op_custom_asset1&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_payment_op_custom_asset1&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_stellar_sign_transaction" file="tests/device_tests/test_msg_stellar_sign_transaction.py" line="91" name="test_sign_tx_account_merge_op" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_account_merge_op&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_account_merge_op&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_stellar_sign_transaction" file="tests/device_tests/test_msg_stellar_sign_transaction.py" line="207" name="test_sign_tx_set_options" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_set_options&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_set_options&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_stellar_sign_transaction" file="tests/device_tests/test_msg_stellar_sign_transaction.py" line="277" name="test_sign_tx_timebounds" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_timebounds&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_timebounds&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_stellar_sign_transaction" file="tests/device_tests/test_msg_stellar_sign_transaction.py" line="146" name="test_sign_tx_payment_op_native_explicit_asset" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_payment_op_native_explicit_asset&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_payment_op_native_explicit_asset&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_stellar_sign_transaction" file="tests/device_tests/test_msg_stellar_sign_transaction.py" line="78" name="test_sign_tx_bump_sequence_op" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_bump_sequence_op&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_bump_sequence_op&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_stellar_sign_transaction" file="tests/device_tests/test_msg_stellar_sign_transaction.py" line="128" name="test_sign_tx_payment_op_native" time="0.012"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_payment_op_native&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_sign_tx_payment_op_native&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_stellar_sign_transaction" file="tests/device_tests/test_msg_stellar_sign_transaction.py" line="308" name="test_manage_data" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_manage_data&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_manage_data&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_recoverydevice_slip39_basic" file="tests/device_tests/test_msg_recoverydevice_slip39_basic.py" line="47" name="test_secret[shares0-491b795b80fc21ccdf466c0fbc98c8fc]" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_secret[shares0-491b795b80fc21ccdf466c0fbc98c8fc]&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_secret[shares0-491b795b80fc21ccdf466c0fbc98c8fc]&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_recoverydevice_slip39_basic" file="tests/device_tests/test_msg_recoverydevice_slip39_basic.py" line="119" name="test_noabort" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_noabort&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_noabort&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_recoverydevice_slip39_basic" file="tests/device_tests/test_msg_recoverydevice_slip39_basic.py" line="139" name="test_ask_word_number" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_ask_word_number&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_ask_word_number&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_recoverydevice_slip39_basic" file="tests/device_tests/test_msg_recoverydevice_slip39_basic.py" line="230" name="test_wrong_nth_word[0]" time="0.002"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_wrong_nth_word[0]&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_wrong_nth_word[0]&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_recoverydevice_slip39_basic" file="tests/device_tests/test_msg_recoverydevice_slip39_basic.py" line="230" name="test_wrong_nth_word[2]" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_wrong_nth_word[2]&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_wrong_nth_word[2]&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase><testcase classname="tests.device_tests.test_msg_recoverydevice_slip39_basic" file="tests/device_tests/test_msg_recoverydevice_slip39_basic.py" line="230" name="test_wrong_nth_word[1]" time="0.001"><error message="test setup failure">def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+&gt;               transport = get_transport(path)
+
+../tests/conftest.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    def get_transport(path: str = None, prefix_search: bool = False) -&gt; Transport:
+        if path is None:
+            try:
+                return next(iter(enumerate_devices()))
+            except StopIteration:
+                raise TransportException(&quot;No Trezor device found&quot;) from None
+    
+        # Find whether B is prefix of A (transport name is part of the path)
+        # or A is prefix of B (path is a prefix, or a name, of transport).
+        # This naively expects that no two transports have a common prefix.
+        def match_prefix(a: str, b: str) -&gt; bool:
+            return a.startswith(b) or b.startswith(a)
+    
+        LOG.info(
+            &quot;looking for device by {}: {}&quot;.format(
+                &quot;prefix&quot; if prefix_search else &quot;full path&quot;, path
+            )
+        )
+        transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+        if transports:
+&gt;           return transports[0].find_by_path(path, prefix_search=prefix_search)
+
+../python/src/trezorlib/transport/__init__.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class &apos;trezorlib.transport.webusb.WebUsbTransport&apos;&gt;, path = &apos;webusb:2717:ff48&apos;, prefix_search = False
+
+    @classmethod
+    def find_by_path(cls, path: str, prefix_search: bool = False) -&gt; &quot;Transport&quot;:
+        for device in cls.enumerate():
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
+                return device
+    
+        raise TransportException(
+&gt;           &quot;{} device not found: {}&quot;.format(cls.PATH_PREFIX, path)
+        )
+E       trezorlib.transport.TransportException: webusb device not found: webusb:2717:ff48
+
+../python/src/trezorlib/transport/__init__.py:96: TransportException
+
+The above exception was the direct cause of the following exception:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_wrong_nth_word[1]&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+&gt;           client = get_device()
+
+../tests/conftest.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_device():
+        path = os.environ.get(&quot;TREZOR_PATH&quot;)
+        interact = int(os.environ.get(&quot;INTERACT&quot;, 0))
+        if path:
+            try:
+                transport = get_transport(path)
+                return TrezorClientDebugLink(transport, auto_interact=not interact)
+            except Exception as e:
+&gt;               raise RuntimeError(&quot;Failed to open debuglink for {}&quot;.format(path)) from e
+E               RuntimeError: Failed to open debuglink for webusb:2717:ff48
+
+../tests/conftest.py:39: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+request = &lt;SubRequest &apos;client&apos; for &lt;Function test_wrong_nth_word[1]&gt;&gt;
+
+    @pytest.fixture(scope=&quot;function&quot;)
+    def client(request):
+        &quot;&quot;&quot;Client fixture.
+    
+        Every test function that requires a client instance will get it from here.
+        If we can&apos;t connect to a debuggable device, the test will fail.
+        If &apos;skip_t2&apos; is used and TT is connected, the test is skipped. Vice versa with T1
+        and &apos;skip_t1&apos;.
+    
+        The client instance is wiped and preconfigured with &quot;all all all...&quot; mnemonic, no
+        password and no pin. It is possible to customize this with the `setup_client`
+        marker.
+    
+        To specify a custom mnemonic and/or custom pin and/or enable passphrase:
+    
+        @pytest.mark.setup_client(mnemonic=MY_MNEMONIC, pin=&quot;9999&quot;, passphrase=True)
+    
+        To receive a client instance that was not initialized:
+    
+        @pytest.mark.setup_client(uninitialized=True)
+        &quot;&quot;&quot;
+        try:
+            client = get_device()
+        except RuntimeError:
+&gt;           pytest.fail(&quot;No debuggable Trezor is available&quot;)
+E           Failed: No debuggable Trezor is available
+
+../tests/conftest.py:77: Failed</error></testcase></testsuite></testsuites>

@@ -1,29 +1,27 @@
+/*
+ * Copyright (C) 2020 Bixin
+ */
+
 #ifndef _sys_H_
 #define _sys_H_
 
 #include <libopencm3/stm32/gpio.h>
 
-#include "buttons.h"
-#include "oled.h"
-#include "timer.h"
-#include "usart.h"
-
-
 // Ble display
-#define BT_LINK 0x01          //蓝牙连接//Connect by Bluetooth
-#define BT_UNLINK 0x02        //蓝牙断开连接指令
-#define BT_DISPIN 0x03        //显示配对密码
-#define BT_PINERROR 0x04      //配对密码错误
-#define BT_PINTIMEOUT 0x05    //配对超时
-#define BT_PAIRINGSCESS 0x06  //配对成功
-#define BT_PINCANCEL 0x07     //取消配对请求
+#define BT_LINK 0x01          // Connect by Bluetooth
+#define BT_UNLINK 0x02        // BLE disconnected
+#define BT_DISPIN 0x03        // Display PIN code
+#define BT_PINERROR 0x04      // PIN code error
+#define BT_PINTIMEOUT 0x05    // Pairing overtime
+#define BT_PAIRINGSCESS 0x06  // Pairing success
+#define BT_PINCANCEL 0x07     // Cancel pairing request
 
-// NFC 已连接
+// NFC Connected
 #define NFC_LINK 0x09
-// USB 已连接
+// USB Connected
 #define USB_LINK 0x08
 
-//配对码的长度
+// Pairing code length
 #define BT_PAIR_LEN 0x06
 
 // APDU TAG
@@ -42,7 +40,7 @@
 
 #define GPIO_USB_INSERT GPIO8
 
-#if (OLD_PCB)
+#ifdef OLD_PCB
 #define GPIO_NFC_INSERT GPIO5
 #else
 #define GPIO_NFC_INSERT GPIO1
@@ -91,16 +89,16 @@
 extern uint8_t g_ucFlag;
 extern uint8_t g_ucWorkMode;
 
-//#define POWER_OFF_TIMER_ENBALE()    (g_ucFlag |= 0x01)
-//#define POWER_OFF_TIMER_CLEAR()     (g_ucFlag &= 0xFE)
-//#define POWER_OFF_TIMER_READY()     (g_ucFlag & 0x01)
+// #define POWER_OFF_TIMER_ENBALE()    (g_ucFlag |= 0x01)
+// #define POWER_OFF_TIMER_CLEAR()     (g_ucFlag &= 0xFE)
+// #define POWER_OFF_TIMER_READY()     (g_ucFlag & 0x01)
 
 #define BUTTON_CHECK_ENBALE() (g_ucFlag |= 0x02)
 #define BUTTON_CHECK_CLEAR() (g_ucFlag &= 0xFD)
 #define PBUTTON_CHECK_READY() (g_ucFlag & 0x02)
 
-void vCalu_BleName(uint8_t* pucMac, uint8_t* pucName);
+void vCalu_BleName(uint8_t *pucMac, uint8_t *pucName);
 void vCheckMode(void);
 void vPower_Control(uint8_t ucMode);
-bool bBle_DisPlay(uint8_t ucIndex, uint8_t* ucStr);
+bool bBle_DisPlay(uint8_t ucIndex, uint8_t *ucStr);
 #endif
