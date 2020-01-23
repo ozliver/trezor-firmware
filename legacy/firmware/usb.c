@@ -17,8 +17,6 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "usb.h"
-
 #include <libopencm3/usb/hid.h>
 #include <libopencm3/usb/usbd.h>
 
@@ -35,6 +33,7 @@
 #include "si2c.h"
 #include "sys.h"
 #include "usart.h"
+#include "usb.h"
 #include "usb21_standard.h"
 #include "util.h"
 #include "webusb.h"
