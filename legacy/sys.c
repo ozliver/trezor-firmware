@@ -2,8 +2,6 @@
  * Copyright (C) 2020 Bixin
  */
 
-#include "sys.h"
-
 #include <libopencm3/stm32/gpio.h>
 #include <string.h>
 
@@ -11,9 +9,9 @@
 #include "buttons.h"
 #include "oled.h"
 #include "si2c.h"
+#include "sys.h"
 #include "timer.h"
 #include "usart.h"
-
 
 uint8_t g_ucWorkMode = 0;
 uint8_t g_ucFlag = 0;
@@ -26,9 +24,7 @@ extern void vDISP_DeviceInfo(void);
  */
 void vCalu_BleName(uint8_t *pucMac, uint8_t *pucName) {
   uint8_t i;
-
   memcpy(pucName, BLE_ADV_NAME, BLE_ADV_NAME_LEN);
-
   for (i = 0; i < 4; i++) {
     pucName[BLE_ADV_NAME_LEN - 4 + i] += pucMac[i] % 20;
   }
@@ -66,7 +62,6 @@ bool bBle_DisPlay(uint8_t ucIndex, uint8_t *ucStr) {
     case BT_PINCANCEL:
       oledDrawStringCenter(60, 30, "Pair Pin Cancel", FONT_STANDARD);
       break;
-
     default:
       break;
   }
