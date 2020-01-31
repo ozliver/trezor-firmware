@@ -21,6 +21,7 @@
 #define __TREZOR_H__
 
 #include <stdint.h>
+
 #include "version.h"
 
 #define STR(X) #X
@@ -35,6 +36,6 @@
 #endif
 
 /* Screen timeout */
-//extern uint32_t system_millis_lock_start;
+// extern uint32_t system_millis_lock_start;
 
 #endif

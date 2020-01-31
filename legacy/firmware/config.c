@@ -17,18 +17,16 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
+
 #include <libopencm3/stm32/flash.h>
 #include <stdint.h>
 #include <string.h>
-
-#include "messages-common.pb.h"
-#include "messages.pb.h"
 
 #include "aes/aes.h"
 #include "bip32.h"
 #include "bip39.h"
 #include "common.h"
-#include "config.h"
 #include "curves.h"
 #include "debug.h"
 #include "gettext.h"
@@ -36,6 +34,8 @@
 #include "layout2.h"
 #include "memory.h"
 #include "memzero.h"
+#include "messages-common.pb.h"
+#include "messages.pb.h"
 #include "pbkdf2.h"
 #include "protect.h"
 #include "rng.h"
@@ -43,6 +43,7 @@
 #include "storage.h"
 #include "supervise.h"
 #include "sys.h"
+#include "timer.h"
 #include "trezor.h"
 #include "u2f.h"
 #include "usb.h"
@@ -79,8 +80,8 @@ static const uint32_t META_MAGIC_V10 = 0xFFFFFFFF;
 #define KEY_NODE (15 | APP)                                   // node
 #define KEY_IMPORTED (16 | APP)                               // bool
 #define KEY_U2F_ROOT (17 | APP | FLAG_PUBLIC_SHIFTED)         // node
-#define KEY_SEEDS (18| APP)                                 // bytes
-#define KEY_SEEDSFLAG (19| APP | FLAG_PUBLIC_SHIFTED)      // uint32
+#define KEY_SEEDS (18 | APP)                                  // bytes
+#define KEY_SEEDSFLAG (19 | APP | FLAG_PUBLIC_SHIFTED)        // uint32
 #define KEY_DEBUG_LINK_PIN (255 | APP | FLAG_PUBLIC_SHIFTED)  // string(10)
 
 // The PIN value corresponding to an empty PIN.
@@ -728,29 +729,26 @@ bool config_setMnemonic(const char *mnemonic) {
   return true;
 }
 
-bool config_setSeedsBytes(const uint8_t *seeds,uint8_t len) {
+bool config_setSeedsBytes(const uint8_t *seeds, uint8_t len) {
   if (seeds == NULL) {
     return false;
   }
 
-  if (sectrue != storage_set(KEY_SEEDS, seeds,
-                             len)) {
+  if (sectrue != storage_set(KEY_SEEDS, seeds, len)) {
     return false;
   }
   config_set_bool(KEY_INITIALIZED, true);
   config_set_bool(KEY_SEEDSFLAG, true);
-  
+
   return true;
 }
 bool config_getSeedsBytes(uint8_t *dest, uint16_t dest_size) {
   uint16_t real_size;
-   if (!config_isInitializedSeeds()) {
-       return false;
-   }
-   return sectrue == config_get_bytes(KEY_SEEDS, dest, dest_size, &real_size);
+  if (!config_isInitializedSeeds()) {
+    return false;
+  }
+  return sectrue == config_get_bytes(KEY_SEEDS, dest, dest_size, &real_size);
 }
-
-
 
 bool config_getMnemonicBytes(uint8_t *dest, uint16_t dest_size,
                              uint16_t *real_size) {
@@ -898,7 +896,6 @@ bool config_isInitializedSeeds(void) {
   config_get_bool(KEY_SEEDSFLAG, &initialized);
   return initialized;
 }
-
 
 bool config_getImported(bool *imported) {
   return sectrue == config_get_bool(KEY_IMPORTED, imported);

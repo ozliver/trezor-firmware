@@ -17,13 +17,13 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include "bootloader.h"
 
 #include <libopencm3/cm3/scb.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
+#include <string.h>
 
-#include "bootloader.h"
 #include "buttons.h"
 #include "layout.h"
 #include "memory.h"
@@ -117,10 +117,10 @@ int main(void) {
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
 #ifndef APPVER
-   memory_protect();
-   oledInit();
+  memory_protect();
+  oledInit();
 #endif
-   mpu_config_bootloader();
+  mpu_config_bootloader();
 #ifndef APPVER
   bool left_pressed = (buttonRead() & BTN_PIN_DOWN) == 0;
 

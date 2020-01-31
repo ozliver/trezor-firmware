@@ -17,6 +17,8 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "signatures.h"
+
 #include <string.h>
 
 #include "bootloader.h"
@@ -25,7 +27,6 @@
 #include "memzero.h"
 #include "secp256k1.h"
 #include "sha2.h"
-#include "signatures.h"
 
 const uint32_t FIRMWARE_MAGIC_OLD = 0x525a5254;  // TRZR
 const uint32_t FIRMWARE_MAGIC_NEW = 0x465a5254;  // TRZF
@@ -53,8 +54,6 @@ static const uint8_t * const pubkey_Bixin[PUBKEYS] = {
 	(const uint8_t *)"\x04\x08\x26\x10\x59\x1B\x4C\xD4\x2E\xDA\x3B\x68\x65\x12\xD5\x64\xFE\x2D\x47\x28\x9E\x3D\xAB\xAF\xDA\xBF\x7E\xDD\xE1\xCA\x9B\x6A\xFE\x57\x36\xB0\xAF\x67\x8E\x0E\x1F\xA4\xBA\x85\x29\x9D\xB3\x58\xF5\xC2\x01\x2D\x9E\x08\xF0\x55\x12\x42\x65\x3C\x5F\xC3\xFB\x44\x43",
 
 };
-
-
 
 #define SIGNATURES 3
 
@@ -110,27 +109,27 @@ int signatures_old_ok(void) {
                                (const uint8_t *)FLASH_META_SIG1,
                                hash)) {  // failure
     if (0 != ecdsa_verify_digest(&secp256k1, pubkey_Bixin[sigindex1 - 1],
-                               (const uint8_t *)FLASH_META_SIG1,
-                                hash)) {  // failure
-        return SIG_FAIL;
+                                 (const uint8_t *)FLASH_META_SIG1,
+                                 hash)) {  // failure
+      return SIG_FAIL;
     }
   }
   if (0 != ecdsa_verify_digest(&secp256k1, pubkey[sigindex2 - 1],
                                (const uint8_t *)FLASH_META_SIG2,
                                hash)) {  // failure
     if (0 != ecdsa_verify_digest(&secp256k1, pubkey_Bixin[sigindex2 - 1],
-                               (const uint8_t *)FLASH_META_SIG2,
-                               hash)) {  // failure
-        return SIG_FAIL;
+                                 (const uint8_t *)FLASH_META_SIG2,
+                                 hash)) {  // failure
+      return SIG_FAIL;
     }
   }
   if (0 != ecdsa_verify_digest(&secp256k1, pubkey[sigindex3 - 1],
                                (const uint8_t *)FLASH_META_SIG3,
                                hash)) {  // failture
     if (0 != ecdsa_verify_digest(&secp256k1, pubkey_Bixin[sigindex3 - 1],
-                               (const uint8_t *)FLASH_META_SIG3,
-                               hash)) {  // failture
-        return SIG_FAIL;
+                                 (const uint8_t *)FLASH_META_SIG3,
+                                 hash)) {  // failture
+      return SIG_FAIL;
     }
   }
 
