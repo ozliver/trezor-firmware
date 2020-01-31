@@ -2,6 +2,8 @@
  * Copyright (C) 2020 Bixin
  */
 
+#include "sys.h"
+
 #include <libopencm3/stm32/gpio.h>
 #include <string.h>
 
@@ -9,9 +11,9 @@
 #include "buttons.h"
 #include "oled.h"
 #include "si2c.h"
-#include "sys.h"
 #include "timer.h"
 #include "usart.h"
+
 
 uint8_t g_ucWorkMode = 0;
 uint8_t g_ucFlag = 0;
@@ -165,4 +167,3 @@ void vCheckMode(void) {
   }
 }
 #endif
-

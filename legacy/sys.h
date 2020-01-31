@@ -7,7 +7,6 @@
 
 #include <libopencm3/stm32/gpio.h>
 
-
 #define NORMAL_PCB 0
 
 // Ble display
