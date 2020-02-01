@@ -98,7 +98,6 @@ from .Features import Features
 from .FirmwareErase import FirmwareErase
 from .FirmwareRequest import FirmwareRequest
 from .FirmwareUpload import FirmwareUpload
-from .GenBitcoinSeeds import GenBitcoinSeeds
 from .GetAddress import GetAddress
 from .GetECDHSessionKey import GetECDHSessionKey
 from .GetEntropy import GetEntropy
