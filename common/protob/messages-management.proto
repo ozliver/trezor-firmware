@@ -363,6 +363,6 @@ message NextU2FCounter {
 /**
  * Request: Gen bitcon seeds random
  * @end
+ * message GenBitcoinSeeds{
+ *}
  */
-message GenBitcoinSeeds{
-}
