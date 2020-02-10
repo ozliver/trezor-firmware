@@ -23,6 +23,14 @@
 #include <stdint.h>
 #include "supervise.h"
 
+extern uint8_t ucTimeFlag;
+
+#define autoPowerOffMsDefault (90 * 1000U)
+
+#define POWER_OFF_TIMER_ENBALE() (ucTimeFlag |= 0x01)
+#define POWER_OFF_TIMER_CLEAR() (ucTimeFlag &= 0xFE)
+#define POWER_OFF_TIMER_READY() (ucTimeFlag & 0x01)
+
 void timer_init(void);
 
 #if EMULATOR

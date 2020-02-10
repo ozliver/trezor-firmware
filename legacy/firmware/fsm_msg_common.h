@@ -82,6 +82,10 @@ void fsm_msgGetFeatures(const GetFeatures *msg) {
   resp->has_flags = config_getFlags(&(resp->flags));
   resp->has_model = true;
   strlcpy(resp->model, "1", sizeof(resp->model));
+  if (session_isUnlocked()) {
+    resp->has_wipe_code_protection = true;
+    resp->wipe_code_protection = config_hasWipeCode();
+  }
 
 #if BITCOIN_ONLY
   resp->capabilities_count = 2;
@@ -170,6 +174,52 @@ void fsm_msgChangePin(const ChangePin *msg) {
       fsm_sendSuccess(_("PIN removed"));
     } else {
       fsm_sendSuccess(_("PIN changed"));
+    }
+  }
+
+  layoutHome();
+}
+
+void fsm_msgChangeWipeCode(const ChangeWipeCode *msg) {
+  CHECK_INITIALIZED
+
+  bool removal = msg->has_remove && msg->remove;
+  bool has_wipe_code = config_hasWipeCode();
+
+  if (removal) {
+    // Note that if storage is locked, then config_hasWipeCode() returns false.
+    if (has_wipe_code || !session_isUnlocked()) {
+      layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                        _("Do you really want to"), _("disable wipe code"),
+                        _("protection?"), NULL, NULL, NULL);
+    } else {
+      fsm_sendSuccess(_("Wipe code removed"));
+      return;
+    }
+  } else {
+    if (has_wipe_code) {
+      layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                        _("Do you really want to"), _("change the current"),
+                        _("wipe code?"), NULL, NULL, NULL);
+    } else {
+      layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                        _("Do you really want to"), _("set a new wipe code?"),
+                        NULL, NULL, NULL, NULL);
+    }
+  }
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
+  if (protectChangeWipeCode(removal)) {
+    if (removal) {
+      fsm_sendSuccess(_("Wipe code removed"));
+    } else if (has_wipe_code) {
+      fsm_sendSuccess(_("Wipe code changed"));
+    } else {
+      fsm_sendSuccess(_("Wipe code set"));
     }
   }
 
@@ -456,5 +506,26 @@ void fsm_msgGetNextU2FCounter() {
   resp->has_u2f_counter = true;
   resp->u2f_counter = counter;
   msg_write(MessageType_MessageType_NextU2FCounter, resp);
+  layoutHome();
+}
+
+void fsm_msgBixinGenSeeds(const BixinGenSeeds *msg) {
+  uint8_t ucBuf[64], i = 0;
+  ;
+  uint32_t uiTemp;
+
+  (void)msg;
+  CHECK_NOT_INITIALIZED
+  CHECK_PIN
+  for (i = 0; i < 16; i++) {
+    uiTemp = random32();
+    memcpy(ucBuf + i * 4, &uiTemp, 4);
+  }
+  if (!config_setSeedsBytes(ucBuf, 64)) {
+    fsm_sendFailure(FailureType_Failure_NotInitialized, NULL);
+    layoutHome();
+    return;
+  }
+  fsm_sendSuccess(_("U2F counter set"));
   layoutHome();
 }

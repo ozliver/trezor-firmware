@@ -26,9 +26,11 @@
 #include <libopencm3/stm32/spi.h>
 
 #include "layout.h"
+#include "mi2c.h"
 #include "rng.h"
+#include "sys.h"
+#include "usart.h"
 #include "util.h"
-
 uint32_t __stack_chk_guard;
 
 static inline void __attribute__((noreturn)) fault_handler(const char *line1) {
@@ -86,10 +88,39 @@ void setup(void) {
   RCC_CR |= RCC_CR_CSSON;
 
   // set GPIO for buttons
-  gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO2 | GPIO5);
+  gpio_mode_setup(BTN_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP,
+                  BTN_PIN_YES | BTN_PIN_UP | BTN_PIN_DOWN);
+  gpio_mode_setup(BTN_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, BTN_PIN_NO);
+
+// usb insert io
+#if (NORMAL_PCB)
+  gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_USB_INSERT);
+#else
+  gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_USB_INSERT);
+#endif
+  gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_NFC_INSERT);
+  // battery power on
+  gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, GPIO_POWER_ON);
+// ble power off
+#if (NORMAL_PCB)
+  gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_BLE_POWER);
+#else
+  gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_BLE_POWER);
+#endif
+  POWER_OFF_BLE();
+  // combus
+  gpio_mode_setup(GPIO_CMBUS_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
+                  GPIO_SI2C_CMBUS);
+  SET_COMBUS_LOW();
+  // se power
+  gpio_mode_setup(GPIO_SE_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
+                  GPIO_SE_POWER);
+  POWER_OFF_SE();
 
   // set GPIO for OLED display
   gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO4);
+  // gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO2 | GPIO4 |
+  // GPIO3);
   gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO0 | GPIO1);
 
   // enable SPI 1 for OLED display
@@ -141,6 +172,27 @@ void setupApp(void) {
 
   gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10);
   gpio_set_af(GPIOA, GPIO_AF10, GPIO10);
+
+#if (_SUPPORT_DEBUG_UART_)
+  usart_setup();
+#endif
+
+  vCheckMode();
+#if (_SUPPORT_DEBUG_UART_)
+  if (WORK_MODE_BLE == g_ucWorkMode) {
+    vUART_DebugInfo("\n\r WORK_MODE_BLE !\n\r", &g_ucWorkMode, 1);
+  } else if (WORK_MODE_USB == g_ucWorkMode) {
+    vUART_DebugInfo("\n\r WORK_MODE_USB !\n\r", &g_ucWorkMode, 1);
+  } else if (WORK_MODE_NFC == g_ucWorkMode) {
+    vUART_DebugInfo("\n\r WORK_MODE_NFC !\n\r", &g_ucWorkMode, 1);
+  } else {
+    vUART_DebugInfo("\n\r WORK_MODE_ERROR !\n\r", &g_ucWorkMode, 1);
+  }
+#endif
+#if (MI2C_TEST)
+  // master i2c init
+  vMI2CDRV_Init();
+#endif
 }
 
 #define MPU_RASR_SIZE_32B (0x04UL << MPU_RASR_SIZE_LSB)

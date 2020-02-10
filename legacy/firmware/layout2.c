@@ -21,21 +21,43 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "../sys.h"
 #include "bignum.h"
 #include "bitmaps.h"
 #include "config.h"
 #include "gettext.h"
 #include "layout2.h"
+#include "memory.h"
 #include "memzero.h"
 #include "nem2.h"
 #include "oled.h"
+#include "prompt.h"
 #include "qrcodegen.h"
 #include "secp256k1.h"
 #include "string.h"
 #include "timer.h"
 #include "util.h"
 
-#define BITCOIN_DIVISIBILITY (8)
+uint8_t Disp_buffer[DISP_BUFSIZE];
+
+static uint16_t s_usCurrentCount;
+
+static uint16_t s_uiShowLength;
+
+/* Screen timeout */
+uint32_t system_millis_lock_start = 0;
+
+#define BLE_NAME "Ble name:"
+#define BLE_MAC "Ble mac:"
+#define BLE_VER "Ble version:"
+
+#define USB_LABLE " Lable:"
+#define USB_SN "SN:"
+#define USB_VER "USB version:"
+#define APP_FINGERPRINT "fingerprint:"
+
+#define DEFAULTLABE "Bixin"
+#define DEFAULSN "20200106"
 
 #if !BITCOIN_ONLY
 
@@ -93,12 +115,12 @@ static const char *address_n_str(const uint32_t *address_n,
         abbr = coin->coin_shortcut + 1;
       }
     } else if (p2sh_segwit) {
-      if (coin && coin->has_segwit && coin->has_address_type_p2sh) {
+      if (coin && coin->has_segwit) {
         abbr = coin->coin_shortcut + 1;
       }
     } else {
       if (coin) {
-        if (coin->has_segwit && coin->has_address_type_p2sh) {
+        if (coin->has_segwit) {
           legacy = true;
         }
         abbr = coin->coin_shortcut + 1;
@@ -186,6 +208,14 @@ const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen) {
   if (rowlen > 32) {
     rowlen = 32;
   }
+  memset(Disp_buffer, 0x00, DISP_BUFSIZE);
+  if (len < DISP_BUFSIZE) {
+    memcpy(Disp_buffer, msg, len);
+  }
+
+  s_usCurrentCount = 0;
+  s_uiShowLength = len;
+
   memzero(str, sizeof(str));
   strlcpy(str[0], (char *)msg, rowlen + 1);
   if (len > rowlen) {
@@ -197,27 +227,27 @@ const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen) {
   if (len > rowlen * 3) {
     strlcpy(str[3], (char *)msg + rowlen * 3, rowlen + 1);
   }
-  if (len > rowlen * 4) {
-    str[3][rowlen - 1] = '.';
-    str[3][rowlen - 2] = '.';
-    str[3][rowlen - 3] = '.';
-  }
+  //  if (len > rowlen * 4) {
+  //    str[3][rowlen - 1] = '.';
+  //    str[3][rowlen - 2] = '.';
+  //    str[3][rowlen - 3] = '.';
+  //  }
   static const char *ret[4] = {str[0], str[1], str[2], str[3]};
   return ret;
 }
 
 const char **split_message_hex(const uint8_t *msg, uint32_t len) {
-  char hex[32 * 2 + 1] = {0};
+  char hex[1024 * 2 + 1] = {0};
   memzero(hex, sizeof(hex));
   uint32_t size = len;
-  if (len > 32) {
-    size = 32;
+  if (len > 1024) {
+    size = 1024;
   }
   data2hex(msg, size, hex);
-  if (len > 32) {
-    hex[63] = '.';
-    hex[62] = '.';
-  }
+  //  if (len > 32) {
+  //    hex[63] = '.';
+  //    hex[62] = '.';
+  //  }
   return split_message((const uint8_t *)hex, size * 2, 16);
 }
 
@@ -249,6 +279,27 @@ void layoutScreensaver(void) {
   oledRefresh();
 }
 
+void vlayoutLogo(void) {
+  if (WORK_MODE_BLE == g_ucWorkMode) {
+    oledDrawBitmap(0, 0, &bmp_ble);
+  } else if (WORK_MODE_USB == g_ucWorkMode) {
+    oledDrawBitmap(0, 0, &bmp_usb);
+  } else if (WORK_MODE_NFC == g_ucWorkMode) {
+    oledDrawBitmap(0, 0, &bmp_nfc);
+  } else {
+    oledDrawBitmap(0, 0, &bmp_ble);
+  }
+  oledDrawBitmap(0, 16, &bmp_logo);
+  if (!config_isInitialized()) {
+    vDisp_PromptInfo(DISP_NOT_ACTIVE);
+  } else {
+    if (WORK_MODE_BLE == g_ucWorkMode) {
+      oledclearLine(6);
+      oledclearLine(7);
+      vDisp_PromptInfo(DISP_BLE_NAME);
+    }
+  }
+}
 void layoutHome(void) {
   if (layoutLast == layoutHome || layoutLast == layoutScreensaver) {
     oledClear();
@@ -270,13 +321,13 @@ void layoutHome(void) {
     b.data = homescreen;
     oledDrawBitmap(0, 0, &b);
   } else {
-    if (label[0] != '\0') {
-      oledDrawBitmap(44, 4, &bmp_logo48);
-      oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, label,
-                           FONT_STANDARD);
-    } else {
-      oledDrawBitmap(40, 0, &bmp_logo64);
-    }
+    vlayoutLogo();
+    /*    if (label[0] != '\0') {*/
+    /*      oledclearLine(6);*/
+    /*      oledclearLine(7);*/
+    /*      oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, label,*/
+    /*                           FONT_STANDARD);*/
+    /*    } */
   }
 
   bool no_backup = false;
@@ -286,14 +337,23 @@ void layoutHome(void) {
   config_getUnfinishedBackup(&unfinished_backup);
   config_getNeedsBackup(&needs_backup);
   if (no_backup) {
-    oledBox(0, 0, 127, 8, false);
-    oledDrawStringCenter(OLED_WIDTH / 2, 0, "SEEDLESS", FONT_STANDARD);
+    oledBox(0, OLED_HEIGHT - 8, 127, 8, false);
+    oledclearLine(6);
+    oledclearLine(7);
+    oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, "SEEDLESS",
+                         FONT_STANDARD);
   } else if (unfinished_backup) {
-    oledBox(0, 0, 127, 8, false);
-    oledDrawStringCenter(OLED_WIDTH / 2, 0, "BACKUP FAILED!", FONT_STANDARD);
+    oledBox(0, OLED_HEIGHT - 8, 127, 8, false);
+    oledclearLine(6);
+    oledclearLine(7);
+    oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, "BACKUP FAILED!",
+                         FONT_STANDARD);
   } else if (needs_backup) {
-    oledBox(0, 0, 127, 8, false);
-    oledDrawStringCenter(OLED_WIDTH / 2, 0, "NEEDS BACKUP!", FONT_STANDARD);
+    oledBox(0, OLED_HEIGHT - 8, 127, 8, false);
+    oledclearLine(6);
+    oledclearLine(7);
+    oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, "NEEDS BACKUP!",
+                         FONT_STANDARD);
   }
   oledRefresh();
 
@@ -346,8 +406,8 @@ static void render_address_dialog(const CoinInfo *coin, const char *address,
 
 void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out) {
   char str_out[32 + 3] = {0};
-  bn_format_uint64(out->amount, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY,
-                   0, false, str_out, sizeof(str_out) - 3);
+  bn_format_uint64(out->amount, NULL, coin->coin_shortcut, coin->decimals, 0,
+                   false, str_out, sizeof(str_out) - 3);
   strlcat(str_out, " to", sizeof(str_out));
   const char *address = out->address;
   const char *extra_line =
@@ -389,8 +449,8 @@ void layoutConfirmOmni(const uint8_t *data, uint32_t size) {
     uint64_t amount_be = 0, amount = 0;
     memcpy(&amount_be, data + 12, sizeof(uint64_t));
     REVERSE64(amount_be, amount);
-    bn_format_uint64(amount, NULL, suffix, divisible ? BITCOIN_DIVISIBILITY : 0,
-                     0, false, str_out, sizeof(str_out));
+    bn_format_uint64(amount, NULL, suffix, divisible ? 8 : 0, 0, false, str_out,
+                     sizeof(str_out));
   } else {
     desc = _("Unknown transaction");
     str_out[0] = 0;
@@ -424,10 +484,10 @@ void layoutConfirmOpReturn(const uint8_t *data, uint32_t size) {
 void layoutConfirmTx(const CoinInfo *coin, uint64_t amount_out,
                      uint64_t amount_fee) {
   char str_out[32] = {0}, str_fee[32] = {0};
-  bn_format_uint64(amount_out, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY,
-                   0, false, str_out, sizeof(str_out));
-  bn_format_uint64(amount_fee, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY,
-                   0, false, str_fee, sizeof(str_fee));
+  bn_format_uint64(amount_out, NULL, coin->coin_shortcut, coin->decimals, 0,
+                   false, str_out, sizeof(str_out));
+  bn_format_uint64(amount_fee, NULL, coin->coin_shortcut, coin->decimals, 0,
+                   false, str_fee, sizeof(str_fee));
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Really send"), str_out, _("from your wallet?"),
                     _("Fee included:"), str_fee, NULL);
@@ -435,8 +495,8 @@ void layoutConfirmTx(const CoinInfo *coin, uint64_t amount_out,
 
 void layoutFeeOverThreshold(const CoinInfo *coin, uint64_t fee) {
   char str_fee[32] = {0};
-  bn_format_uint64(fee, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0,
-                   false, str_fee, sizeof(str_fee));
+  bn_format_uint64(fee, NULL, coin->coin_shortcut, coin->decimals, 0, false,
+                   str_fee, sizeof(str_fee));
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Fee"), str_fee, _("is unexpectedly high."), NULL,
                     _("Send anyway?"), NULL);
@@ -967,4 +1027,165 @@ void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count,
   }
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), desc, str[0],
                     str[1], str[2], str[3], NULL, NULL);
+}
+
+void Disp_Page(const BITMAP *icon, const char *btnNo, const char *btnYes,
+               const char *desc, uint8_t *pucInfoBuf, uint16_t usLen) {
+  char j, line1[33], line2[33], line3[33], line4[33], line5[33], line6[33];
+  j = 0;
+  if (usLen > 32) {
+    usLen = 32;
+  }
+  memzero(line1, sizeof(line1));
+  memzero(line2, sizeof(line2));
+  memzero(line3, sizeof(line3));
+  memzero(line4, sizeof(line4));
+  memzero(line5, sizeof(line5));
+  memzero(line6, sizeof(line6));
+  memcpy(line1, (char *)(pucInfoBuf + j * usLen), usLen);
+  j++;
+  memcpy(line2, (char *)(pucInfoBuf + j * usLen), usLen);
+  j++;
+  memcpy(line3, (char *)(pucInfoBuf + j * usLen), usLen);
+  j++;
+  memcpy(line4, (char *)(pucInfoBuf + j * usLen), usLen);
+  j++;
+  memcpy(line5, (char *)(pucInfoBuf + j * usLen), usLen);
+  j++;
+  memcpy(line6, (char *)(pucInfoBuf + j * usLen), usLen);
+
+  layoutDialog(icon, btnNo, btnYes, desc, line1, line2, line3, line4, line5,
+               line6);
+}
+
+void vDISP_TurnPageUP(void) {
+  if (s_usCurrentCount == 0) {
+    return;
+  }
+  s_usCurrentCount = s_usCurrentCount - DISP_PAGESIZE;
+  Disp_Page(&bmp_icon_question, _("Up"), _("Down"), NULL,
+            Disp_buffer + s_usCurrentCount, 16);
+}
+
+void vDISP_TurnPageDOWN(void) {
+  if ((s_usCurrentCount + DISP_PAGESIZE) >= s_uiShowLength) {
+    return;
+  }
+  s_usCurrentCount += DISP_PAGESIZE;
+  Disp_Page(&bmp_icon_question, _("Up"), _("Down"), NULL,
+            Disp_buffer + s_usCurrentCount, 16);
+}
+void vGet_DeviceInfo(uint8_t ucPage) {
+  uint8_t ucBuf[66];
+  uint8_t line[17];
+
+  switch (ucPage) {
+    case 0:
+      oledClear();
+      oledDrawString(0, 0, (char *)USB_LABLE, FONT_STANDARD);
+
+      oledDrawStringCenter(64, 8, (char *)DEFAULTLABE, FONT_STANDARD);
+
+      oledDrawString(0, 24, (char *)USB_SN, FONT_STANDARD);
+      oledDrawStringCenter(64, 32, (char *)DEFAULSN, FONT_STANDARD);
+
+      oledDrawString(0, 48, (char *)USB_VER, FONT_STANDARD);
+      memzero(ucBuf, sizeof(ucBuf));
+      ucBuf[0] = VERSION_MAJOR + '0';
+      ucBuf[1] = '.';
+      ucBuf[2] = VERSION_MINOR + '0';
+      ucBuf[3] = '.';
+      ucBuf[4] = VERSION_PATCH + '0';
+      oledDrawString(64, 56, (char *)ucBuf, FONT_STANDARD);
+      s_usCurrentCount = ucPage;
+      break;
+    case 1:
+      oledClear();
+      oledDrawString(0, 0, (char *)APP_FINGERPRINT, FONT_STANDARD);
+      memzero(g_usb_info.ucfingerprint, sizeof(g_usb_info.ucfingerprint));
+      sha256_Raw(FLASH_PTR(FLASH_APP_START), (64 - 1) * 1024,
+                 g_usb_info.ucfingerprint);
+      data2hex(g_usb_info.ucfingerprint, 32, (char *)ucBuf);
+      memzero(line, sizeof(line));
+      memcpy(line, ucBuf, 0x10);
+      oledDrawStringCenter(64, 16, (char *)line, FONT_STANDARD);
+      memzero(line, sizeof(line));
+      memcpy(line, ucBuf + 0x10, 0x10);
+      oledDrawStringCenter(64, 24, (char *)line, FONT_STANDARD);
+      memzero(line, sizeof(line));
+      memcpy(line, ucBuf + 0x10, 0x10);
+      oledDrawStringCenter(64, 32, (char *)line, FONT_STANDARD);
+      memzero(line, sizeof(line));
+      memcpy(line, ucBuf + 0x10, 0x10);
+      oledDrawStringCenter(64, 40, (char *)line, FONT_STANDARD);
+      s_usCurrentCount = ucPage;
+      break;
+    case 2:
+      if (WORK_MODE_BLE == g_ucWorkMode) {
+        oledClear();
+        oledDrawString(0, 0, (char *)BLE_NAME, FONT_STANDARD);
+        oledDrawStringCenter(64, 8, (char *)g_ble_info.ucBle_Name,
+                             FONT_STANDARD);
+        oledDrawString(0, 16, (char *)BLE_MAC, FONT_STANDARD);
+        memzero(ucBuf, sizeof(ucBuf));
+        data2hex(g_ble_info.ucBle_Mac, BLE_MAC_LEN, (char *)ucBuf);
+        oledDrawStringCenter(64, 24, (char *)ucBuf, FONT_STANDARD);
+
+        oledDrawString(0, 32, (char *)BLE_VER, FONT_STANDARD);
+        memzero(ucBuf, sizeof(ucBuf));
+        ucBuf[0] = ((g_ble_info.ucBle_Version[0] & 0xF0) >> 4) + '0';
+        ucBuf[1] = '.';
+        ucBuf[2] = (g_ble_info.ucBle_Version[0] & 0x0F) + '0';
+        ucBuf[3] = '.';
+        ucBuf[4] = ((g_ble_info.ucBle_Version[1] & 0xF0) >> 4) + '0';
+        ucBuf[5] = (g_ble_info.ucBle_Version[1] & 0x0F) + '0';
+
+        oledDrawString(64, 48, (char *)ucBuf, FONT_STANDARD);
+      }
+      s_usCurrentCount = ucPage;
+      break;
+  }
+
+  oledRefresh();
+}
+
+void vDISP_DeviceInfo(void) {
+  buttonUpdate();
+
+  if ((layoutLast == layoutHome) && (button.UpUp || button.DownUp)) {
+    vGet_DeviceInfo(0);
+    while (1) {
+      delay(100000);
+      buttonUpdate();
+      if (button.NoUp) {
+        layoutHome();
+        break;
+      }
+      if (button.UpUp) {
+        if (s_usCurrentCount) {
+          s_usCurrentCount--;
+        } else {
+          s_usCurrentCount = 2;
+        }
+        vGet_DeviceInfo(s_usCurrentCount);
+      }
+      if (button.DownUp) {
+        if (s_usCurrentCount < 2) {
+          s_usCurrentCount++;
+        } else {
+          s_usCurrentCount = 0;
+        }
+        vGet_DeviceInfo(s_usCurrentCount);
+      }
+    }
+  }
+  // if homescreen is shown for too long
+  if (layoutLast == layoutHome) {
+    if ((timer_ms() - system_millis_lock_start) >=
+        config_getAutoLockDelayMs()) {
+      // lock the screen
+      session_clear(true);
+      layoutScreensaver();
+    }
+  }
 }
