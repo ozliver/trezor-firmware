@@ -30,6 +30,7 @@
 #include "messages.pb.h"
 #include "oled.h"
 #include "pinmatrix.h"
+#include "sys.h"
 #include "usb.h"
 #include "util.h"
 
@@ -60,30 +61,81 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
     if (msg_tiny_id == MessageType_MessageType_ButtonAck) {
       msg_tiny_id = 0xFFFF;
       acked = true;
-    }
-
-    // button acked - check buttons
-    if (acked) {
-      usbSleep(5);
+      BUTTON_CHECK_ENBALE();
       buttonUpdate();
-      if (button.YesUp) {
-        result = true;
-        break;
+    }
+    if (WORK_MODE_USB == g_ucWorkMode) {
+      // button acked - check buttons
+      if (acked) {
+        usbSleep(5);
+        buttonUpdate();
+        if (button.YesUp) {
+          result = true;
+          break;
+        }
+        if (!confirm_only && button.NoUp) {
+          result = false;
+          break;
+        }
+        if (button.UpUp) {
+          vDISP_TurnPageUP();
+        }
+        if (button.DownUp) {
+          vDISP_TurnPageDOWN();
+        }
       }
-      if (!confirm_only && button.NoUp) {
+
+      // check for Cancel / Initialize
+      protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
+      protectAbortedByInitialize =
+          (msg_tiny_id == MessageType_MessageType_Initialize);
+      if (protectAbortedByCancel || protectAbortedByInitialize) {
+        msg_tiny_id = 0xFFFF;
         result = false;
         break;
       }
-    }
+    } else {
+      // button acked - check buttons
+      if (acked || PBUTTON_CHECK_READY()) {
+        usbSleep(5);
+        if (WORK_MODE_USB == g_ucWorkMode) {
+          // buttonUpdate();
+        }
+        if (button.YesUp) {
+          BUTTON_CHECK_CLEAR();
+          result = true;
+          layoutHome();
+          usbPoll();
+          break;
+        }
+        if (!confirm_only && button.NoUp) {
+          BUTTON_CHECK_CLEAR();
+          result = false;
+          layoutHome();
+          usbPoll();
+          break;
+        }
+        if (button.UpUp) {
+          vDISP_TurnPageUP();
+        }
+        if (button.DownUp) {
+          vDISP_TurnPageDOWN();
+        }
+        memzero(&resp, sizeof(ButtonRequest));
+        resp.has_code = true;
+        resp.code = type;
+        msg_write(MessageType_MessageType_ButtonRequest, &resp);
+      }
 
-    // check for Cancel / Initialize
-    protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
-    protectAbortedByInitialize =
-        (msg_tiny_id == MessageType_MessageType_Initialize);
-    if (protectAbortedByCancel || protectAbortedByInitialize) {
-      msg_tiny_id = 0xFFFF;
-      result = false;
-      break;
+      // check for Cancel / Initialize
+      protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
+      protectAbortedByInitialize =
+          (msg_tiny_id == MessageType_MessageType_Initialize);
+      if (protectAbortedByCancel || protectAbortedByInitialize) {
+        msg_tiny_id = 0xFFFF;
+        result = false;
+        break;
+      }
     }
 
 #if DEBUG_LINK
@@ -198,6 +250,7 @@ bool protectPin(bool use_cached) {
 
   const char *pin = "";
   if (config_hasPin()) {
+    g_ucPromptIndex = DISP_INPUTPIN;
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current,
                      _("Please enter current PIN:"));
     if (!pin) {
@@ -219,6 +272,7 @@ bool protectChangePin(bool removal) {
   const char *pin = NULL;
 
   if (config_hasPin()) {
+    g_ucPromptIndex = DISP_INPUTPIN;
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current,
                      _("Please enter current PIN:"));
     if (pin == NULL) {
@@ -241,6 +295,7 @@ bool protectChangePin(bool removal) {
   }
 
   if (!removal) {
+    g_ucPromptIndex = DISP_INPUTPIN;
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewFirst,
                      _("Please enter new PIN:"));
     if (pin == NULL) {
@@ -250,6 +305,17 @@ bool protectChangePin(bool removal) {
     }
     strlcpy(new_pin, pin, sizeof(new_pin));
 
+#if !EMULATOR
+    g_ucPromptIndex = DISP_CONFIRM_PIN;
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                      _("Please confirm PIN"), NULL, NULL, new_pin, NULL, NULL);
+
+    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      layoutHome();
+      return false;
+    }
+#else
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond,
                      _("Please re-enter new PIN:"));
     if (pin == NULL) {
@@ -258,18 +324,92 @@ bool protectChangePin(bool removal) {
       fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
       return false;
     }
-
     if (strncmp(new_pin, pin, sizeof(new_pin)) != 0) {
       memzero(old_pin, sizeof(old_pin));
       memzero(new_pin, sizeof(new_pin));
       fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
       return false;
     }
+#endif
   }
 
   bool ret = config_changePin(old_pin, new_pin);
   memzero(old_pin, sizeof(old_pin));
   memzero(new_pin, sizeof(new_pin));
+  if (ret == false) {
+    if (removal) {
+      fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+    } else {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("The new PIN must be different from your wipe code."));
+    }
+  }
+  return ret;
+}
+
+bool protectChangeWipeCode(bool removal) {
+  static CONFIDENTIAL char pin[MAX_PIN_LEN + 1] = "";
+  static CONFIDENTIAL char wipe_code[MAX_PIN_LEN + 1] = "";
+  const char *input = NULL;
+
+  if (config_hasPin()) {
+    input = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current,
+                       _("Please enter your PIN:"));
+    if (input == NULL) {
+      fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
+      return false;
+    }
+
+    // If removing, defer the check to config_changeWipeCode().
+    if (!removal) {
+      usbTiny(1);
+      bool ret = config_unlock(input);
+      usbTiny(0);
+      if (ret == false) {
+        fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+        return false;
+      }
+    }
+
+    strlcpy(pin, input, sizeof(pin));
+  }
+
+  if (!removal) {
+    input = requestPin(PinMatrixRequestType_PinMatrixRequestType_WipeCodeFirst,
+                       _("Enter new wipe code:"));
+    if (input == NULL) {
+      memzero(pin, sizeof(pin));
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      return false;
+    }
+    if (strncmp(pin, input, sizeof(pin)) == 0) {
+      memzero(pin, sizeof(pin));
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("The wipe code must be different from your PIN."));
+      return false;
+    }
+    strlcpy(wipe_code, input, sizeof(wipe_code));
+
+    input = requestPin(PinMatrixRequestType_PinMatrixRequestType_WipeCodeSecond,
+                       _("Re-enter new wipe code:"));
+    if (input == NULL) {
+      memzero(pin, sizeof(pin));
+      memzero(wipe_code, sizeof(wipe_code));
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      return false;
+    }
+
+    if (strncmp(wipe_code, input, sizeof(wipe_code)) != 0) {
+      memzero(pin, sizeof(pin));
+      memzero(wipe_code, sizeof(wipe_code));
+      fsm_sendFailure(FailureType_Failure_WipeCodeMismatch, NULL);
+      return false;
+    }
+  }
+
+  bool ret = config_changeWipeCode(pin, wipe_code);
+  memzero(pin, sizeof(pin));
+  memzero(wipe_code, sizeof(wipe_code));
   if (ret == false) {
     fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
   }

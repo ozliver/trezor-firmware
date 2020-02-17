@@ -25,6 +25,7 @@
 #include "layout.h"
 #include "oled.h"
 #include "rng.h"
+#include "sys.h"
 #include "util.h"
 
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];

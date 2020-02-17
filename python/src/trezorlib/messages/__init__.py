@@ -17,6 +17,7 @@ from .BinanceSignTx import BinanceSignTx
 from .BinanceSignedTx import BinanceSignedTx
 from .BinanceTransferMsg import BinanceTransferMsg
 from .BinanceTxRequest import BinanceTxRequest
+from .BixinGenSeeds import BixinGenSeeds
 from .ButtonAck import ButtonAck
 from .ButtonRequest import ButtonRequest
 from .Cancel import Cancel
@@ -31,6 +32,7 @@ from .CardanoTxInputType import CardanoTxInputType
 from .CardanoTxOutputType import CardanoTxOutputType
 from .CardanoTxRequest import CardanoTxRequest
 from .ChangePin import ChangePin
+from .ChangeWipeCode import ChangeWipeCode
 from .CipherKeyValue import CipherKeyValue
 from .CipheredKeyValue import CipheredKeyValue
 from .ClearSession import ClearSession

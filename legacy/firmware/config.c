@@ -42,6 +42,7 @@
 #include "sha2.h"
 #include "storage.h"
 #include "supervise.h"
+#include "sys.h"
 #include "trezor.h"
 #include "u2f.h"
 #include "usb.h"
@@ -78,6 +79,8 @@ static const uint32_t META_MAGIC_V10 = 0xFFFFFFFF;
 #define KEY_NODE (15 | APP)                                   // node
 #define KEY_IMPORTED (16 | APP)                               // bool
 #define KEY_U2F_ROOT (17 | APP | FLAG_PUBLIC_SHIFTED)         // node
+#define KEY_SEEDS (18 | APP)                                  // bytes
+#define KEY_SEEDSFLAG (19 | APP | FLAG_PUBLIC_SHIFTED)        // uint32
 #define KEY_DEBUG_LINK_PIN (255 | APP | FLAG_PUBLIC_SHIFTED)  // string(10)
 
 // The PIN value corresponding to an empty PIN.
@@ -125,7 +128,8 @@ static uint8_t CONFIDENTIAL sessionSeed[64];
 static secbool sessionPassphraseCached = secfalse;
 static char CONFIDENTIAL sessionPassphrase[51];
 
-#define autoLockDelayMsDefault (10 * 60 * 1000U)  // 10 minutes
+#define autoLockDelayMsDefault (3 * 60 * 1000U)  // 3 minutes
+
 static secbool autoLockDelayMsCached = secfalse;
 static uint32_t autoLockDelayMs = autoLockDelayMsDefault;
 
@@ -378,13 +382,15 @@ static secbool config_upgrade_v10(void) {
 }
 
 void config_init(void) {
+  char ucBuf[32];
   char oldTiny = usbTiny(1);
 
   config_upgrade_v10();
 
   storage_init(&protectPinUiCallback, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
   memzero(HW_ENTROPY_DATA, sizeof(HW_ENTROPY_DATA));
-
+  //
+  config_getLanguage(ucBuf, MAX_LANGUAGE_LEN);
   // Auto-unlock storage if no PIN is set.
   if (storage_is_unlocked() == secfalse && storage_has_pin() == secfalse) {
     storage_unlock(PIN_EMPTY, NULL);
@@ -520,9 +526,13 @@ void config_setLanguage(const char *lang) {
   }
 
   // Sanity check.
-  if (strcmp(lang, "english") != 0) {
+  if (strcmp(lang, "en-US") != 0) {
     return;
   }
+  if (strcmp(lang, "chinese") != 0) {
+    return;
+  }
+
   storage_set(KEY_LANGUAGE, lang, strnlen(lang, MAX_LANGUAGE_LEN));
 }
 
@@ -665,7 +675,22 @@ bool config_getLabel(char *dest, uint16_t dest_size) {
 }
 
 bool config_getLanguage(char *dest, uint16_t dest_size) {
-  return sectrue == config_get_string(KEY_LANGUAGE, dest, dest_size);
+  if (sectrue == config_get_string(KEY_LANGUAGE, dest, dest_size)) {
+    if (dest_size == 7 && (strcmp(dest, "english") != 0)) {
+      // fallthrough -> return "en-US"
+    } else {
+      // other language -> return the value
+      if (strcmp(dest, "chinese") == 0) {
+        g_ucLanguageFlag = 1;
+      } else {
+        g_ucLanguageFlag = 0;
+      }
+      return true;
+    }
+  }
+  strcpy(dest, "en-US");
+  dest_size = 5;
+  return true;
 }
 
 bool config_getHomescreen(uint8_t *dest, uint16_t dest_size) {
@@ -701,6 +726,27 @@ bool config_setMnemonic(const char *mnemonic) {
   config_set_bool(KEY_INITIALIZED, true);
 
   return true;
+}
+
+bool config_setSeedsBytes(const uint8_t *seeds, uint8_t len) {
+  if (seeds == NULL) {
+    return false;
+  }
+
+  if (sectrue != storage_set(KEY_SEEDS, seeds, len)) {
+    return false;
+  }
+  config_set_bool(KEY_INITIALIZED, true);
+  config_set_bool(KEY_SEEDSFLAG, true);
+
+  return true;
+}
+bool config_getSeedsBytes(uint8_t *dest, uint16_t dest_size) {
+  uint16_t real_size;
+  if (!config_isInitializedSeeds()) {
+    return false;
+  }
+  return sectrue == config_get_bytes(KEY_SEEDS, dest, dest_size, &real_size);
 }
 
 bool config_getMnemonicBytes(uint8_t *dest, uint16_t dest_size,
@@ -785,6 +831,22 @@ bool config_getPin(char *dest, uint16_t dest_size) {
 }
 #endif
 
+bool config_hasWipeCode(void) { return sectrue == storage_has_wipe_code(); }
+
+bool config_changeWipeCode(const char *pin, const char *wipe_code) {
+  uint32_t wipe_code_int = pin_to_int(wipe_code);
+  if (wipe_code_int == 0) {
+    return false;
+  }
+
+  char oldTiny = usbTiny(1);
+  secbool ret = storage_change_wipe_code(pin_to_int(pin), NULL, wipe_code_int);
+  usbTiny(oldTiny);
+
+  memzero(&wipe_code_int, sizeof(wipe_code_int));
+  return sectrue == ret;
+}
+
 void session_cachePassphrase(const char *passphrase) {
   strlcpy(sessionPassphrase, passphrase, sizeof(sessionPassphrase));
   sessionPassphraseCached = sectrue;
@@ -826,6 +888,11 @@ bool session_isUnlocked(void) { return sectrue == storage_is_unlocked(); }
 bool config_isInitialized(void) {
   bool initialized = false;
   config_get_bool(KEY_INITIALIZED, &initialized);
+  return initialized;
+}
+bool config_isInitializedSeeds(void) {
+  bool initialized = false;
+  config_get_bool(KEY_SEEDSFLAG, &initialized);
   return initialized;
 }
 

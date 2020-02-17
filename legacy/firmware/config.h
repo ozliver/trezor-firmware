@@ -119,6 +119,9 @@ bool config_getMnemonic(char *dest, uint16_t dest_size);
 bool config_getMnemonicBytes(uint8_t *dest, uint16_t dest_size,
                              uint16_t *real_size);
 
+bool config_setSeedsBytes(const uint8_t *seeds, uint8_t len);
+bool config_getSeedsBytes(uint8_t *dest, uint16_t dest_size);
+
 #if DEBUG_LINK
 bool config_dumpNode(HDNodeType *node);
 bool config_getPin(char *dest, uint16_t dest_size);
@@ -129,10 +132,14 @@ bool config_hasPin(void);
 bool config_changePin(const char *old_pin, const char *new_pin);
 bool session_isUnlocked(void);
 
+bool config_hasWipeCode(void);
+bool config_changeWipeCode(const char *pin, const char *wipe_code);
+
 uint32_t config_nextU2FCounter(void);
 void config_setU2FCounter(uint32_t u2fcounter);
 
 bool config_isInitialized(void);
+bool config_isInitializedSeeds(void);
 
 bool config_getImported(bool *imported);
 void config_setImported(bool imported);

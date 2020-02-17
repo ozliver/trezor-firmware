@@ -30,6 +30,7 @@
 #include "oled.h"
 #include "rng.h"
 #include "setup.h"
+#include "sys.h"
 #include "timer.h"
 #include "usb.h"
 #include "util.h"
@@ -38,58 +39,52 @@
 #include "otp.h"
 #endif
 
+#define autoPowerOffDelayMsDefault (5 * 60 * 1000U)  // 5 minutes
+
 /* Screen timeout */
-uint32_t system_millis_lock_start = 0;
+// uint32_t system_millis_lock_start = 0;
 
-void check_lock_screen(void) {
-  buttonUpdate();
+// void check_lock_screen(void) {
+//  buttonUpdate();
 
-  // wake from screensaver on any button
-  if (layoutLast == layoutScreensaver && (button.NoUp || button.YesUp)) {
-    layoutHome();
-    return;
-  }
+//  // wake from screensaver on any button
+//  if (layoutLast == layoutScreensaver &&
+//      (button.NoUp || button.YesUp || button.UpUp || button.DownUp ||
+//       (GET_NFC_INSERT()))) {
+//    layoutHome();
+//    return;
+//  }
 
-  // button held for long enough (2 seconds)
-  if (layoutLast == layoutHome && button.NoDown >= 285000 * 2) {
-    layoutDialog(&bmp_icon_question, _("Cancel"), _("Lock Device"), NULL,
-                 _("Do you really want to"), _("lock your Trezor?"), NULL, NULL,
-                 NULL, NULL);
-
-    // wait until NoButton is released
-    usbTiny(1);
-    do {
-      usbSleep(5);
-      buttonUpdate();
-    } while (!button.NoUp);
-
-    // wait for confirmation/cancellation of the dialog
-    do {
-      usbSleep(5);
-      buttonUpdate();
-    } while (!button.YesUp && !button.NoUp);
-    usbTiny(0);
-
-    if (button.YesUp) {
-      // lock the screen
-      session_clear(true);
-      layoutScreensaver();
-    } else {
-      // resume homescreen
-      layoutHome();
-    }
-  }
-
-  // if homescreen is shown for too long
-  if (layoutLast == layoutHome) {
-    if ((timer_ms() - system_millis_lock_start) >=
-        config_getAutoLockDelayMs()) {
-      // lock the screen
-      session_clear(true);
-      layoutScreensaver();
-    }
-  }
-}
+//  // if homescreen is shown for too long
+//  if (layoutLast == layoutHome) {
+//    if ((timer_ms() - system_millis_lock_start) >=
+//        config_getAutoLockDelayMs()) {
+//      // lock the screen
+//      session_clear(true);
+//      layoutScreensaver();
+//      system_millis_poweroff_start = timer_ms();
+//    }
+//  }
+//  if (layoutLast == layoutScreensaver) {
+//    if (WORK_MODE_USB != g_ucWorkMode) {
+//      // no usb and no nfc
+//      if ((0x00 == GET_USB_INSERT()) && (GET_NFC_INSERT())) {
+//        // power off time
+//        if ((timer_ms() - system_millis_poweroff_start) >=
+//            (autoPowerOffDelayMsDefault - config_getAutoLockDelayMs())) {
+//          vDisp_PromptInfo(DISP_PRESSKEY_POWEROFF);
+//          POWER_OFF();
+//          while (1)
+//            ;
+//        }
+//      } else {
+//        system_millis_poweroff_start = timer_ms();
+//      }
+//    } else {
+//      system_millis_poweroff_start = timer_ms();
+//    }
+//  }
+//}
 
 static void collect_hw_entropy(bool privileged) {
 #if EMULATOR
@@ -149,15 +144,20 @@ int main(void) {
 #endif
 #endif
 
-  oledDrawBitmap(40, 0, &bmp_logo64);
+#if EMULATOR
+  g_ucWorkMode = WORK_MODE_USB;
+#endif
+  vlayoutLogo();
   oledRefresh();
 
   config_init();
   layoutHome();
   usbInit();
+  buttonUpdate();
   for (;;) {
     usbPoll();
-    check_lock_screen();
+    // check_lock_screen();
+    vDISP_DeviceInfo();
   }
 
   return 0;
