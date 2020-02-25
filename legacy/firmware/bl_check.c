@@ -20,10 +20,12 @@
 #include <libopencm3/stm32/flash.h>
 #include <stdint.h>
 #include <string.h>
+
 #include "bl_data.h"
 #include "gettext.h"
 #include "layout.h"
 #include "memory.h"
+#include "oled.h"
 #include "util.h"
 
 #if MEMORY_PROTECT
