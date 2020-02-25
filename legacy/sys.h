@@ -106,6 +106,7 @@ extern uint8_t g_ucWorkMode;
 extern uint8_t g_ucBatValue;
 extern uint8_t g_ucLanguageFlag;
 extern uint8_t g_ucPromptIndex;
+extern uint8_t g_SerialNO[12];
 
 extern volatile uint32_t system_millis_poweroff_start;
 
@@ -124,4 +125,5 @@ void vCalu_BleName(uint8_t* pucMac, uint8_t* pucName);
 void vCheckMode(void);
 void vPower_Control(uint8_t ucMode);
 bool bBle_DisPlay(uint8_t ucIndex, uint8_t* ucStr);
+void serial_No(void);
 #endif

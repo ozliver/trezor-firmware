@@ -59,12 +59,11 @@ typedef struct USB_DEVICE_INFO {
 #define DISP_INPUTPIN \
   0x06  // Enter PIN code according to the prompts on the
         // right screen
-#define DISP_BUTTON_OK_RO_NO 0x07     // Press OK to confirm, Press < to Cancel
+#define DISP_BUTTON_OK_OR_NO 0x07     // Press OK to confirm, Press ^ to Cancel
 #define DISP_GEN_PRI_KEY 0x08         // Generating private key...
 #define DISP_ACTIVE_SUCCESS 0x09      // Activated
 #define DISP_BOTTON_UP_OR_DOWN 0x0A   // Turn up or down to view
-#define DISP_SN 0x0B                  // Serial NO.
-#define DISP_VERSION 0x0C             // Firmware version
+#define DISP_SN_VERSION 0x0B          // Serial NO. and Firmware version
 #define DISP_CONFIRM_PUB_KEY 0x0D     // Confirm public key
 #define DISP_BOTTON_OK_SIGN 0x0E      // Press OK to sign
 #define DISP_SIGN_SUCCESS 0x0F        // Signed! Touch it to the phone closely
@@ -84,6 +83,11 @@ typedef struct USB_DEVICE_INFO {
 #define DISP_UPDATE_SETTINGS 0x18        // update settings
 #define DISP_BIXIN_KEY_INITIALIZED 0x19  // Bixin Key initialized
 #define DISP_CONFIRM_PIN 0x1A            // confirm pin
+#define DISP_BLE_LINK 0x1B               // Connect by BLE
+#define DISP_VIEW_HW_INFO 0x1D           // View Hardware Infomation
+#define DISP_RESTORE_SETTINGS 0x1E       // Restore settings or not
+#define DISP_HAS_RESTORED_SETTINGS 0x1F  // Has restored settings
+#define DISP_BIXIN_KEY_ACTIVED_OK 0x20   // BixinKEY Activated
 
 extern Ble_Info g_ble_info;
 extern USB_Info g_usb_info;

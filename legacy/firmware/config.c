@@ -20,6 +20,7 @@
 #include <libopencm3/stm32/flash.h>
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "messages-common.pb.h"
 #include "messages.pb.h"

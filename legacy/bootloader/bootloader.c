@@ -94,7 +94,7 @@ static void bootloader_loop(void) {
   oledClear();
   oledDrawBitmap(0, 0, &bmp_logo64);
   if (firmware_present_new()) {
-    oledDrawStringCenter(90, 10, "Trezor", FONT_STANDARD);
+    oledDrawStringCenter(90, 10, "BixinKEY", FONT_STANDARD);
     oledDrawStringCenter(90, 30, "Bootloader", FONT_STANDARD);
     oledDrawStringCenter(90, 50,
                          VERSTR(VERSION_MAJOR) "." VERSTR(
@@ -103,7 +103,7 @@ static void bootloader_loop(void) {
   } else {
     oledDrawStringCenter(90, 10, "Welcome!", FONT_STANDARD);
     oledDrawStringCenter(90, 30, "Please visit", FONT_STANDARD);
-    oledDrawStringCenter(90, 50, "trezor.io/start", FONT_STANDARD);
+    oledDrawStringCenter(90, 50, "https://bixin.com", FONT_STANDARD);
   }
   oledRefresh();
 

@@ -52,54 +52,32 @@ void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
                   const char *line3, const char *line4, const char *line5,
                   const char *line6) {
   int left = 0;
+  int language_used = 0;
   oledClear();
-  if (g_ucLanguageFlag) {
-    vDisp_PromptInfo(g_ucPromptIndex, false);
-    if (line3) oledDrawString(left, 2 * 9, line3, FONT_STANDARD);
-    if (line4) oledDrawString(left, 3 * 9, line4, FONT_STANDARD);
-    if (desc) {
-      oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 2 * 9 - 1, desc,
-                           FONT_STANDARD);
-      if (btnYes || btnNo) {
-        oledHLine(OLED_HEIGHT - 21);
-      }
-    } else {
-      if (line5) oledDrawString(left, 4 * 9, line5, FONT_STANDARD);
-      if (line6) oledDrawString(left, 5 * 9, line6, FONT_STANDARD);
-      if (btnYes || btnNo) {
-        oledHLine(OLED_HEIGHT - 13);
-      }
-    }
+  if (icon) {
+    oledDrawBitmap(0, 0, icon);
+    left = icon->width + 4;
+  }
+  if (line1) oledDrawString(left, 0 * 9, line1, FONT_STANDARD);
+  if (line2) oledDrawString(left, 1 * 9, line2, FONT_STANDARD);
+  if (line3) oledDrawString(left, 2 * 9, line3, FONT_STANDARD);
+  if (line4) oledDrawString(left, 3 * 9, line4, FONT_STANDARD);
+  if (desc) {
+    oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 2 * 9 - 1, desc,
+                         FONT_STANDARD);
     if (btnYes || btnNo) {
-      vDisp_PromptInfo(DISP_BUTTON_OK_RO_NO, false);
+      oledHLine(OLED_HEIGHT - 21);
+      language_used = g_ucLanguageFlag;
+      g_ucLanguageFlag = 0;
+      vDisp_PromptInfo(DISP_BUTTON_OK_OR_NO, false);
+      g_ucLanguageFlag = language_used;
     }
   } else {
-    if (icon) {
-      oledDrawBitmap(0, 0, icon);
-      left = icon->width + 4;
-    }
-    if (line1) oledDrawString(left, 0 * 9, line1, FONT_STANDARD);
-    if (line2) oledDrawString(left, 1 * 9, line2, FONT_STANDARD);
-    if (line3) oledDrawString(left, 2 * 9, line3, FONT_STANDARD);
-    if (line4) oledDrawString(left, 3 * 9, line4, FONT_STANDARD);
-    if (desc) {
-      oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 2 * 9 - 1, desc,
-                           FONT_STANDARD);
-      if (btnYes || btnNo) {
-        oledHLine(OLED_HEIGHT - 21);
-      }
-    } else {
-      if (line5) oledDrawString(left, 4 * 9, line5, FONT_STANDARD);
-      if (line6) oledDrawString(left, 5 * 9, line6, FONT_STANDARD);
-      if (btnYes || btnNo) {
-        oledHLine(OLED_HEIGHT - 13);
-      }
-    }
-    if (btnNo) {
-      layoutButtonNo(btnNo, &bmp_btn_cancel);
-    }
-    if (btnYes) {
-      layoutButtonYes(btnYes, &bmp_btn_confirm);
+    if (line5) oledDrawString(left, 4 * 9, line5, FONT_STANDARD);
+    if (line6) oledDrawString(left, 5 * 9, line6, FONT_STANDARD);
+    if (btnYes || btnNo) {
+      oledHLine(OLED_HEIGHT - 13);
+      vDisp_PromptInfo(DISP_BUTTON_OK_OR_NO, false);
     }
   }
   oledRefresh();
