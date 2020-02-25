@@ -1,8 +1,8 @@
 
 #include "sys.h"
 #include <libopencm3/stm32/gpio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include "bitmaps.h"
 #include "si2c.h"
 
