@@ -148,8 +148,6 @@ int main(void) {
 #if EMULATOR
   g_ucWorkMode = WORK_MODE_USB;
 #endif
-  vlayoutLogo();
-  oledRefresh();
 
   config_init();
   layoutHome();

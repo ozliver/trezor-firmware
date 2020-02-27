@@ -1,6 +1,7 @@
 
 #include "sys.h"
 #include <libopencm3/stm32/gpio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "bitmaps.h"
 #include "si2c.h"
@@ -11,6 +12,7 @@ uint8_t g_ucBatValue = 0;
 
 uint8_t g_ucLanguageFlag = 0;
 uint8_t g_ucPromptIndex = 0;
+uint8_t g_SerialNO[12] = {};
 
 /*poweroff */
 volatile uint32_t system_millis_poweroff_start;
@@ -92,5 +94,16 @@ bool bBle_DisPlay(uint8_t ucIndex, uint8_t *ucStr) {
     return true;
   } else {
     return false;
+  }
+}
+
+void serial_No(void) {
+  char letters[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
+                    'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+                    'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+  for (int i = 0; i < 12; i++) {
+    int index;
+    index = rand() % 36;
+    g_SerialNO[i] = letters[index];
   }
 }

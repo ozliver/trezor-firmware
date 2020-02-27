@@ -281,43 +281,50 @@ void layoutScreensaver(void) {
 }
 
 void vlayoutLogo(void) {
+  oledClear();
+  oledDrawBitmap(40, 0, &bmp_logo64);
+  oledRefresh();
+#if !EMULATOR
+  delay(4000000000);
+#endif
+  oledClear();
   if (WORK_MODE_BLE == g_ucWorkMode) {
-    oledDrawBitmap(0, 0, &bmp_ble);
+    oledDrawBitmap(0, 0, &bmp_ble_64);
   } else if (WORK_MODE_USB == g_ucWorkMode) {
-    oledDrawBitmap(0, 0, &bmp_usb);
+    oledDrawBitmap(0, 0, &bmp_usb_64);
   } else if (WORK_MODE_NFC == g_ucWorkMode) {
-    oledDrawBitmap(0, 0, &bmp_nfc);
-  } else {
-    oledDrawBitmap(0, 0, &bmp_ble);
+    oledDrawBitmap(0, 0, &bmp_nfc_64);
   }
-  if (WORK_MODE_USB != g_ucWorkMode) {
-    if (GET_USB_INSERT()) {
-      oledDrawBitmap(104, 0, &bmp_battery);  // charge
+  if (GET_USB_INSERT()) {
+    oledDrawBitmap(104, 0, &bmp_battery_charging);  // charging
+  } else {
+    if (g_ucBatValue == 100) {
+      oledDrawBitmap(104, 0, &bmp_battery_100);  // 1
+    } else if (g_ucBatValue == 80) {
+      oledDrawBitmap(104, 0, &bmp_battery_66);  // 2/3
+    } else if (g_ucBatValue == 60) {
+      oledDrawBitmap(104, 0, &bmp_battery_50);  // 1/2
+    } else if (g_ucBatValue == 40) {
+      oledDrawBitmap(104, 0, &bmp_battery_33);  // 1/3
     } else {
-      if (g_ucBatValue == 100) {
-        oledDrawBitmap(104, 0, &bmp_battery);  // 1
-      } else if (g_ucBatValue == 80) {
-        oledDrawBitmap(104, 0, &bmp_battery);  // 2/3
-      } else if (g_ucBatValue == 60) {
-        oledDrawBitmap(104, 0, &bmp_battery);  // 1/2
-      } else if (g_ucBatValue == 40) {
-        oledDrawBitmap(104, 0, &bmp_battery);  // 1/3
-      } else {
-        oledDrawBitmap(104, 0, &bmp_battery);
-      }
+      oledDrawBitmap(104, 0, &bmp_battery_0);  // 0
     }
   }
-  oledDrawBitmap(0, 16, &bmp_logo);
   if (!config_isInitialized()) {
     vDisp_PromptInfo(DISP_NOT_ACTIVE, false);
   } else {
-    if (WORK_MODE_BLE == g_ucWorkMode) {
-      oledclearLine(6);
-      oledclearLine(7);
-      vDisp_PromptInfo(DISP_BLE_NAME, false);
-    }
+    vDisp_PromptInfo(DISP_ACTIVE_SUCCESS, false);
   }
+  oledRefresh();
+#if !EMULATOR
+  delay(4000000000);
+#endif
+  vDisp_PromptInfo(DISP_SN_VERSION, true);
+#if !EMULATOR
+  delay(4000000000);
+#endif
 }
+
 void layoutHome(void) {
   if (layoutLast == layoutHome || layoutLast == layoutScreensaver) {
     oledClear();
@@ -326,7 +333,7 @@ void layoutHome(void) {
   }
   layoutLast = layoutHome;
 
-  char label[MAX_LABEL_LEN + 1] = _("Go to trezor.io/start");
+  char label[MAX_LABEL_LEN + 1] = _("Go to https://bixin.com");
   if (config_isInitialized()) {
     config_getLabel(label, sizeof(label));
   }
@@ -417,8 +424,7 @@ static void render_address_dialog(const CoinInfo *coin, const char *address,
       oledHLine(OLED_HEIGHT - 13);
     }
   }
-  layoutButtonNo(_("Cancel"), &bmp_btn_cancel);
-  layoutButtonYes(_("Confirm"), &bmp_btn_confirm);
+  vDisp_PromptInfo(DISP_BUTTON_OK_OR_NO, false);
   oledRefresh();
 }
 
@@ -533,6 +539,7 @@ void layoutSignMessage(const uint8_t *msg, uint32_t len) {
                       _("Sign message?"), str[0], str[1], str[2], str[3], NULL,
                       NULL);
   }
+  vDisp_PromptInfo(DISP_BOTTON_OK_SIGN, true);
 }
 
 void layoutVerifyMessage(const uint8_t *msg, uint32_t len) {
@@ -731,6 +738,11 @@ void layoutPublicKey(const uint8_t *pubkey) {
   const char **str = split_message_hex(pubkey + 1, 32 * 2);
   layoutDialogSwipe(&bmp_icon_question, NULL, _("Continue"), NULL, desc, str[0],
                     str[1], str[2], str[3], NULL);
+#if !EMULATOR
+  vDisp_PromptInfo(DISP_CONFIRM_PUB_KEY, true);
+  oledDrawStringCenter(64, 40, (char *)pubkey, FONT_STANDARD);
+  oledRefresh();
+#endif
 }
 
 void layoutSignIdentity(const IdentityType *identity, const char *challenge) {
@@ -1169,7 +1181,6 @@ void vGet_DeviceInfo(uint8_t ucPage) {
 
 void vDISP_DeviceInfo(void) {
   buttonUpdate();
-
   if ((layoutLast == layoutHome) && (button.UpUp || button.DownUp)) {
     vGet_DeviceInfo(0);
     while (1) {

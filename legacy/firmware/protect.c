@@ -316,6 +316,7 @@ bool protectChangePin(bool removal) {
       return false;
     }
 #else
+    g_ucPromptIndex = DISP_CONFIRM_PIN;
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond,
                      _("Please re-enter new PIN:"));
     if (pin == NULL) {
@@ -331,6 +332,7 @@ bool protectChangePin(bool removal) {
       return false;
     }
 #endif
+    vDisp_PromptInfo(DISP_BIXIN_KEY_ACTIVED_OK, true);
   }
 
   bool ret = config_changePin(old_pin, new_pin);
