@@ -293,6 +293,11 @@ void fsm_msgSignMessage(const SignMessage *msg) {
     }
     resp->has_signature = true;
     resp->signature.size = 65;
+#if !EMULATOR
+    vDisp_PromptInfo(DISP_SIGN_SUCCESS, true);
+    delay_ms(500);
+    vDisp_PromptInfo(DISP_SIGN_PRESS_OK_HOME, true);
+#endif
     msg_write(MessageType_MessageType_MessageSignature, resp);
   } else {
     fsm_sendFailure(FailureType_Failure_ProcessError,

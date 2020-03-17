@@ -19,7 +19,9 @@
  */
 
 #include "recovery.h"
+
 #include <ctype.h>
+
 #include "bip39.h"
 #include "config.h"
 #include "fsm.h"
@@ -175,6 +177,7 @@ static void recovery_done(void) {
           config_setImported(true);
         }
         fsm_sendSuccess(_("Device recovered"));
+        vDisp_PromptInfo(DISP_HAS_RESTORED_SETTINGS, true);
       } else {
         fsm_sendFailure(FailureType_Failure_ProcessError,
                         _("Failed to store mnemonic"));
@@ -480,9 +483,7 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
   dry_run = _dry_run;
 
   if (!dry_run) {
-    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                      _("Do you really want to"), _("recover the device?"),
-                      NULL, NULL, NULL, NULL);
+    vDisp_PromptInfo(DISP_RESTORE_SETTINGS, true);
     if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       layoutHome();

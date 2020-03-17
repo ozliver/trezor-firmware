@@ -106,7 +106,7 @@ extern uint8_t g_ucBatValue;
 //#define POWER_OFF_TIMER_READY()     (g_ucFlag & 0x01)
 
 #define BUTTON_CHECK_ENBALE() (g_ucFlag |= 0x02)
-#define BUTTON_CHECK_CLEAR() (g_ucFlag &= 0xFD) cd
+#define BUTTON_CHECK_CLEAR() (g_ucFlag &= 0xFD)
 #define PBUTTON_CHECK_READY() (g_ucFlag & 0x02)
 
 void vCalu_BleName(uint8_t* pucMac, uint8_t* pucName);
